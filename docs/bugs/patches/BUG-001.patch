@@ -1,0 +1,13 @@
+diff --git a/packages/excalidraw/components/main-menu/MainMenu.tsx b/packages/excalidraw/components/main-menu/MainMenu.tsx
+index 07afd3c..58001fa 100644
+--- a/packages/excalidraw/components/main-menu/MainMenu.tsx
++++ b/packages/excalidraw/components/main-menu/MainMenu.tsx
+@@ -44,6 +44,8 @@ const MainMenu = Object.assign(
+               }}
+               data-testid="main-menu-trigger"
+               className="main-menu-trigger"
++              aria-label={t("buttons.menu")}
++              title={t("buttons.menu")}
+             >
+               {HamburgerMenuIcon}
+             </DropdownMenu.Trigger>

@@ -1,0 +1,15 @@
+diff --git a/packages/excalidraw/components/Dialog.tsx b/packages/excalidraw/components/Dialog.tsx
+index 0a105cf..f1d47f8 100644
+--- a/packages/excalidraw/components/Dialog.tsx
++++ b/packages/excalidraw/components/Dialog.tsx
+@@ -61,6 +61,10 @@ export const Dialog = (props: DialogProps) => {
+       if (focusableElements.length > 0 && props.autofocus !== false) {
+         // If there's an element other than close, focus it.
+         (focusableElements[1] || focusableElements[0]).focus();
++      } else if (focusableElements.length === 0) {
++        // Nothing focusable (e.g. desktop ErrorDialog): focus the modal so
++        // its Escape handler receives keyboard events.
++        islandNode.closest<HTMLElement>(".Modal__content")?.focus();
+       }
+     });
+ 

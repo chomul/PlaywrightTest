@@ -1,0 +1,24 @@
+diff --git a/packages/excalidraw/actions/actionExport.tsx b/packages/excalidraw/actions/actionExport.tsx
+index 8d18acd..e6d9fb2 100644
+--- a/packages/excalidraw/actions/actionExport.tsx
++++ b/packages/excalidraw/actions/actionExport.tsx
+@@ -258,7 +258,9 @@ export const actionLoadScene = register({
+       } = await loadFromJSON(appState, elements);
+       return {
+         elements: loadedElements,
+-        appState: loadedAppState,
++        // appState was captured before the async file pick, while the menu
++        // that triggered "Open" was still open; don't restore that.
++        appState: { ...loadedAppState, openMenu: null },
+         files,
+         captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+       };
+@@ -269,7 +271,7 @@ export const actionLoadScene = register({
+       }
+       return {
+         elements,
+-        appState: { ...appState, errorMessage: error.message },
++        appState: { ...appState, openMenu: null, errorMessage: error.message },
+         files: app.files,
+         captureUpdate: CaptureUpdateAction.EVENTUALLY,
+       };

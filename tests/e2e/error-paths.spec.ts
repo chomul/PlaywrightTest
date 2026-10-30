@@ -216,8 +216,13 @@ test.describe("오류 안내 대화상자: 키보드 사용자", () => {
     test.info().annotations.push({ type: "bug", description: "docs/bugs/BUG-003.md" });
     test.fail(true, "BUG-003: desktop error dialog takes no focus, so Escape is ignored");
 
-    await openSceneFile(editor, dataFile("broken.excalidraw"));
+    // Open with Ctrl+O, not the menu: the menu path also reopens the menu
+    // (BUG-002), which would mix the two defects.
+    const chooser = page.waitForEvent("filechooser");
+    await page.keyboard.press("ControlOrMeta+o");
+    await (await chooser).setFiles(dataFile("broken.excalidraw"));
     await expect(errorDialog(page)).toBeVisible();
+    await expect(editor.menu.content).toBeHidden();
 
     await page.keyboard.press("Escape");
     await expect(errorDialog(page)).toBeHidden({ timeout: 2_000 });

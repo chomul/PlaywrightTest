@@ -1,5 +1,6 @@
 import { test, expect } from "../support/test";
 import { dataFile, openSceneFile } from "../support/files";
+import type { SceneElement } from "../pages/EditorPage";
 
 const box = (i: number) => ({ x: 350 + i * 220, y: 250, width: 160, height: 100 });
 
@@ -13,7 +14,11 @@ test.describe("S5 새로고침과 뒤로 가기 후 상태 유지", () => {
     await page.reload();
     await editor.waitUntilReady();
 
-    expect(await editor.storedElements()).toEqual(before);
+    // Compare what the user made, not the whole record: restore normalizes
+    // some fields (boundElements null → []) and re-saves at its own pace.
+    const pick = ({ id, type, x, y, width, height, strokeColor }: SceneElement) =>
+      ({ id, type, x, y, width, height, strokeColor });
+    await expect.poll(async () => (await editor.storedElements()).map(pick)).toEqual(before.map(pick));
     // Selection is part of the saved app state, so the panel comes back too.
     await editor.properties.expectVisible();
     const state = await page.evaluate(() => JSON.parse(localStorage.getItem("excalidraw-state")!));

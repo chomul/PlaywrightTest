@@ -1,0 +1,26 @@
+diff --git a/packages/excalidraw/components/Card.scss b/packages/excalidraw/components/Card.scss
+index ba0fbc4..410adf0 100644
+--- a/packages/excalidraw/components/Card.scss
++++ b/packages/excalidraw/components/Card.scss
+@@ -46,7 +46,7 @@
+         background-color: var(--card-color-darkest);
+       }
+       .ToolIcon__label {
+-        color: $oc-white;
++        color: var(--card-text-color, #{$oc-white});
+       }
+ 
+       .Spinner {
+diff --git a/packages/excalidraw/components/Card.tsx b/packages/excalidraw/components/Card.tsx
+index 2ba5a97..f3b12eb 100644
+--- a/packages/excalidraw/components/Card.tsx
++++ b/packages/excalidraw/components/Card.tsx
+@@ -12,6 +12,8 @@ export const Card: React.FC<{
+       style={{
+         ["--card-color" as any]:
+           color === "primary" ? "var(--color-primary)" : OpenColor[color][7],
++        ["--card-text-color" as any]:
++          color === "lime" ? OpenColor.gray[9] : OpenColor.white,
+         ["--card-color-darker" as any]:
+           color === "primary"
+             ? "var(--color-primary-darker)"
