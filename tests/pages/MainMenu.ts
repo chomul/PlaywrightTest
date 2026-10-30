@@ -3,16 +3,19 @@ import { expect, type Locator, type Page } from "@playwright/test";
 /** Hamburger menu and the dialogs it opens. */
 export class MainMenu {
   readonly trigger: Locator;
+  readonly content: Locator;
 
   constructor(readonly page: Page) {
     // The trigger button has no accessible name (see docs/bugs), so the
     // app's own test id is used.
     this.trigger = page.getByTestId("main-menu-trigger");
+    // The dropdown has no menu role; the app's test id scopes the items away
+    // from same-named welcome screen buttons ("Open", "Help").
+    this.content = page.getByTestId("dropdown-menu");
   }
 
   item(name: string) {
-    // exact: the welcome screen also has "Open Ctrl+O" etc.
-    return this.page.getByRole("button", { name, exact: true });
+    return this.content.getByRole("button", { name, exact: true });
   }
 
   get isOpen() {
