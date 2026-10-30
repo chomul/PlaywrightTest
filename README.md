@@ -1,5 +1,7 @@
 # Excalidraw E2E (Playwright)
 
+[![E2E](https://github.com/chomul/PlaywrightTest/actions/workflows/e2e.yml/badge.svg)](https://github.com/chomul/PlaywrightTest/actions/workflows/e2e.yml)
+
 오픈소스 웹 화이트보드 [Excalidraw](https://github.com/excalidraw/excalidraw)를 대상으로 만든 Playwright E2E 테스트 저장소입니다.
 
 ## 테스트 대상
@@ -61,6 +63,6 @@ scripts/
 | 실행 수 | 186회(데스크톱 3개 브라우저 x 58 + 모바일 12) |
 | 브라우저별 통과 | Chromium 58/58, Firefox 58/58, WebKit 58/58, Pixel 7(Chromium) 12/12. 알려진 결함 고정 테스트의 기대된 실패 12회 포함 |
 | 전체 실행 시간(로컬) | 75.9초(Windows 11, 2026-10-30) |
-| CI 실행 시간 | 측정 안 함 |
+| CI 실행 시간 | 9분 43초(GitHub Actions 첫 실행, 2026-10-30, 커밋 `c82e210`). 앱 빌드와 브라우저 캐시가 없던 상태라 Excalidraw 클론, 설치, 빌드와 브라우저 설치 시간이 포함됨. 잡별로는 E2E(Ubuntu) 9분 39초 중 테스트 실행 5분 39초, Visual(Windows) 4분 40초 중 테스트 실행 35초. 캐시가 있는 실행은 측정 안 함 |
 | 찾은 결함 | 4건(Major 2, Minor 2). [docs/bugs](docs/bugs/README.md) |
 | flaky | 개발 중 2건 발견, 원인 수정. `--repeat-each=10` 전체 점검은 측정 안 함(실행이 중간에 중단됨). [docs/FLAKY.md](docs/FLAKY.md) |
