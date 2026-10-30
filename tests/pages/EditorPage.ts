@@ -127,7 +127,13 @@ export class EditorPage {
     const raw = await this.page.evaluate(() =>
       window.localStorage.getItem("excalidraw"),
     );
-    const all: SceneElement[] = raw ? JSON.parse(raw) : [];
+    let all: SceneElement[] = [];
+    try {
+      all = raw ? JSON.parse(raw) : [];
+    } catch {
+      // Unparsable until the app's first save overwrites it (a test may
+      // seed corrupted data on purpose). Treat as "nothing valid yet".
+    }
     return opts.includeDeleted ? all : all.filter((el) => !el.isDeleted);
   }
 
