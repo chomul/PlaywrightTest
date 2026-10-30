@@ -31,7 +31,8 @@ export class PropertiesPanel {
   }
 
   strokeWidthRadio(width: StrokeWidth) {
-    // These radios have no accessible name (BUG-001), only a test id.
+    // Browsers name these radios from the wrapping label's title ("Thin"),
+    // but Playwright's role engine does not, so the app's test id is used.
     return this.root.getByTestId(`strokeWidth-${width}`);
   }
 
