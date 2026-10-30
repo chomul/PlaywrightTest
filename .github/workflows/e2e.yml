@@ -1,0 +1,166 @@
+name: E2E
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: "Regenerate visual baselines on the runner and upload them as an artifact"
+        type: boolean
+        default: false
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  e2e:
+    name: E2E (chromium, firefox, webkit, Pixel 7)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install test dependencies
+        run: npm ci
+
+      # Excalidraw clone + node_modules + build, keyed by the pinned tag.
+      - name: Cache Excalidraw app
+        id: app-cache
+        uses: actions/cache@v4
+        with:
+          path: app
+          key: app-${{ runner.os }}-${{ hashFiles('APP_VERSION', 'scripts/setup-app.sh') }}
+
+      - name: Set up Excalidraw (clone, install, build)
+        if: steps.app-cache.outputs.cache-hit != 'true'
+        run: npm run setup:app
+
+      - name: Read Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Install browser system dependencies
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium firefox webkit
+
+      # Visual baselines are committed for Windows only; see the visual job.
+      - name: Run tests
+        run: npx playwright test --grep-invert @visual
+
+      - name: Summarize results
+        if: ${{ !cancelled() }}
+        run: node scripts/summarize-results.js --markdown >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-e2e
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload traces of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-e2e
+          path: test-results/
+          retention-days: 14
+
+  visual:
+    name: Visual regression (Windows baselines)
+    # Baselines were created on Windows; font rasterization differs on Linux,
+    # so the screenshot comparison runs on a Windows runner.
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install test dependencies
+        run: npm ci
+
+      - name: Cache Excalidraw app
+        id: app-cache
+        uses: actions/cache@v4
+        with:
+          path: app
+          key: app-${{ runner.os }}-${{ hashFiles('APP_VERSION', 'scripts/setup-app.sh') }}
+
+      - name: Set up Excalidraw (clone, install, build)
+        if: steps.app-cache.outputs.cache-hit != 'true'
+        run: npm run setup:app
+
+      - name: Read Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/AppData/Local/ms-playwright
+          key: pw-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium firefox webkit
+
+      - name: Run visual tests
+        run: |
+          if [ "${{ inputs.update_snapshots }}" = "true" ]; then
+            npx playwright test --grep @visual --update-snapshots
+          else
+            npx playwright test --grep @visual
+          fi
+
+      - name: Upload regenerated baselines
+        if: ${{ inputs.update_snapshots }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines-windows
+          path: tests/__screenshots__/
+
+      - name: Upload HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-visual
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload diffs and traces of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-visual
+          path: test-results/
+          retention-days: 14
